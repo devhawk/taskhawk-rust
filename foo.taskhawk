@@ -1,0 +1,5 @@
+echo test one
+cargo version
+time
+echo test two
+dotnet --version
