@@ -1,41 +1,44 @@
-use std::io::{self, BufReader};
-use std::io::prelude::*;
 use std::fs::File;
+use std::io::prelude::*;
+use std::io::{self, BufReader, Error, ErrorKind};
 
 use std::process::{Command, Stdio};
-use std::path::Path;
 
-fn exec_command(cmd: &str, arg: &str) -> io::Result<bool> {
-
+fn exec_command(cmd: &str, arg: &str) -> io::Result<()> {
     println!("{} {}", cmd, arg);
-    let status = Command::new(cmd)
+    let output = Command::new(cmd)
         .arg(arg)
         .stdout(Stdio::inherit())
-        .status()?;
+        .output()?;
 
-    Ok(status.success())
+    if output.status.success() {
+        Ok(())
+    } else {
+        let err_msg = std::str::from_utf8(&output.stderr)
+            .map_err(|_| Error::new(ErrorKind::Other, "stderr utf8 error"))?;
+        Err(Error::new(ErrorKind::Other, err_msg))
+    }
 }
 
 fn main() -> io::Result<()> {
-    let path = std::env::args().nth(1).expect("no task file path given");
-    if !Path::new(&path).exists()
-    {
-        panic!("{} task file does not exist", path)
-    }
+    let path = std::env::args()
+        .nth(1)
+        .ok_or(Error::new(ErrorKind::Other, "no task file path given"))?;
 
     let file = File::open(path)?;
     let reader = BufReader::new(file);
     for line in reader.lines() {
-        let line = line.unwrap();
-        let (a,b) = match line.find(' ') {
-            Some(pos) => (&line[..pos], &line[pos+1..]),
+        let line = line?;
+        if line.starts_with("//") {
+            continue;
+        }
+        let (cmd, arg) = match line.find(' ') {
+            Some(pos) => (&line[..pos], &line[pos + 1..]),
             None => (&line[..], ""),
         };
 
-        let exec_result = exec_command(&a, &b)?;
-        if !exec_result { break; }
+        let _ = exec_command(&cmd, &arg)?;
     }
-    // let path = std::fs::canonicalize(&path);
 
     Ok(())
 }

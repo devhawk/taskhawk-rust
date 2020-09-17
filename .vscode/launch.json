@@ -19,7 +19,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["foo.taskhawk"],
+            "args": ["fsoo.taskhawk"],
             "cwd": "${workspaceFolder}"
         },
         {
