@@ -1,5 +1,6 @@
 echo test one
 cargo version
-time
+//time
+shasjh
 echo test two
 dotnet --version

@@ -9,6 +9,7 @@ fn exec_command(cmd: &str, arg: &str, cwd: &std::path::Path) -> io::Result<()> {
         .current_dir(&cwd)
         .arg(arg)
         .stdout(Stdio::inherit())
+        .stderr(Stdio::inherit())
         .output()?;
 
     if output.status.success() {
